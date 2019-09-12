@@ -8,9 +8,11 @@ import java.awt.event.WindowEvent;
 import javax.swing.JFrame;
 
 import com.moving.vehicle.bean.Panel;
+import com.moving.vehicle.main.ObjectAnimationManager;
 import com.moving.vehicle.model.VehicleModel;
 
 import javax.swing.JOptionPane;
+import javax.swing.SwingUtilities;
 
 /**
  * @author Ravikiran
@@ -25,6 +27,7 @@ public class VehicleMotion implements Runnable {
 	private int vehicleCount;
 	private VehiclePanel vehiclePanel;
 	private JFrame frame;
+	private ObjectAnimationManager objectAnimationManager;
 
 	public boolean isVehicleRunning() {
 		return vehicleRunning;
@@ -103,8 +106,6 @@ public class VehicleMotion implements Runnable {
 	/**
 	 * The frame properties are set here and a windowlistener
 	 * is used to stop the thread once the application ends.
-	 * A loop is used to constantly check the status of the application
-	 * and repaints our graphics as long as it is running.
 	 */
 	@Override
 	public void run()
@@ -121,23 +122,20 @@ public class VehicleMotion implements Runnable {
 		frame.setBackground(Color.LIGHT_GRAY);
 		frame.setTitle("Moving Vehicles");
 
-		while(vehicleRunning)
-		{
-			frame.addWindowListener(new WindowAdapter() {
+		frame.addWindowListener(new WindowAdapter() {
 				@Override
 				public void windowClosing(WindowEvent event) {
 					exitApplication();
 				}
-			});
-			moveVehicle();
-			vehiclePanel.repaint();
-			try {
-				Thread.sleep(5);
-			} catch (InterruptedException e) {
-			}
-		}
+			});		
+		objectAnimationManager = new ObjectAnimationManager(this, vehiclesArray);
+        new Thread(objectAnimationManager).start();
 	}
 
+	public void repaintMovingVehicle() {
+		vehiclePanel.repaint();		
+	}
+	
 	private void exitApplication() {
 		setVehicleRunning(false);
 		frame.dispose();
@@ -145,9 +143,7 @@ public class VehicleMotion implements Runnable {
 	}
 
 	public static void main(String[] args) {
-		VehicleMotion vehicleMotion = new VehicleMotion();
-		Thread d = new Thread(vehicleMotion);
-		d.start();
+		 SwingUtilities.invokeLater(new VehicleMotion());
 	}
 
 }
